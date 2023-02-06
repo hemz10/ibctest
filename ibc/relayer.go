@@ -96,6 +96,8 @@ type Relayer interface {
 	//
 	// "env" are environment variables in the format "MY_ENV_VAR=value"
 	Exec(ctx context.Context, rep RelayerExecReporter, cmd []string, env []string) RelayerExecResult
+
+	ExecCmd(ctx context.Context, rep RelayerExecReporter, cmd, chainID string) (RelayerExecResult, error)
 }
 
 // GetTransferChannel will return the transfer channel assuming only one client,

@@ -36,6 +36,13 @@ require (
 	modernc.org/sqlite v1.17.3
 )
 
+require (
+	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
+	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
+	github.com/gofrs/uuid v4.2.0+incompatible // indirect
+	github.com/hashicorp/go-memdb v1.3.2 // indirect
+)
+
 //require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.10
 
 require (
@@ -68,6 +75,7 @@ require (
 	github.com/cosmos/iavl v0.19.2-0.20220916140702-9b6be3095313 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
+	github.com/cucumber/godog v0.12.6
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/decred/base58 v1.0.4 // indirect

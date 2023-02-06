@@ -259,6 +259,17 @@ func (r *DockerRelayer) LinkPath(ctx context.Context, rep ibc.RelayerExecReporte
 	return res.Err
 }
 
+func (r *DockerRelayer) ExecCmd(ctx context.Context, rep ibc.RelayerExecReporter, cmd, chainID string) (ibc.RelayerExecResult, error) {
+	home := r.HomeDir()
+	comd := []string{"rly", "q", cmd, chainID,
+		"--home", home}
+	res := r.Exec(ctx, rep, comd, nil)
+	if res.Err != nil {
+		return res, res.Err
+	}
+	return res, nil
+}
+
 func (r *DockerRelayer) Exec(ctx context.Context, rep ibc.RelayerExecReporter, cmd []string, env []string) ibc.RelayerExecResult {
 	job := dockerutil.NewImage(r.log, r.client, r.networkID, r.testName, r.containerImage().Repository, r.containerImage().Version)
 	opts := dockerutil.ContainerOptions{

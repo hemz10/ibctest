@@ -3,9 +3,13 @@ package ibc
 import (
 	"reflect"
 	"strconv"
+	"time"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	types1 "github.com/cosmos/ibc-go/v6/modules/core/23-commitment/types"
+	bytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
 // ChainConfig defines the chain parameters requires to run an ibctest testnet for a chain.
@@ -209,10 +213,18 @@ type ClientOutput struct {
 }
 
 type ClientState struct {
-	ChainID string `json:"chain_id"`
+	ChainID                string             `json:"chain_id"`
+	AllowUpdateAfterExpiry bool               `json:"allowUpdateAfterExpiry"`
+	LatestHeight           clienttypes.Height `json:"latestHeight"`
 }
 
 type ClientOutputs []*ClientOutput
+
+type CLientConsensusState struct {
+	Timestamp          time.Time         `json:"timestamp"`
+	Root               types1.MerkleRoot `json:"root"`
+	NextValidatorsHash bytes.HexBytes    `json:"nextValidatorsHash"`
+}
 
 type Wallet interface {
 	KeyName() string

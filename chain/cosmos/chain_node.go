@@ -383,6 +383,7 @@ func (tn *ChainNode) TxCommand(keyName string, command ...string) []string {
 	return tn.NodeCommand(append(command,
 		"--from", keyName,
 		"--gas-prices", tn.Chain.Config().GasPrices,
+		"--gas=auto",
 		"--gas-adjustment", fmt.Sprint(tn.Chain.Config().GasAdjustment),
 		"--keyring-backend", keyring.BackendTest,
 		"--output", "json",
