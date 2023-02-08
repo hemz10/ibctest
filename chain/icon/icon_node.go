@@ -2,17 +2,25 @@ package icon
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"path"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
+	iconclient "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon"
+	icontypes "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
+	iconlog "github.com/icon-project/icon-bridge/common/log"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	"github.com/strangelove-ventures/ibctest/v6/internal/blockdb"
 	"github.com/strangelove-ventures/ibctest/v6/internal/dockerutil"
+	"github.com/strangelove-ventures/ibctest/v6/testutil"
 	"go.uber.org/zap"
 )
 
@@ -22,6 +30,7 @@ type IconNode struct {
 	Chain        ibc.Chain
 	NetworkID    string
 	DockerClient *dockerclient.Client
+	Client       iconclient.Client
 	TestName     string
 	Image        ibc.DockerImage
 	log          *zap.Logger
@@ -60,6 +69,19 @@ func (tn *IconNode) CreateKey(ctx context.Context, name string) error {
 
 func (tn *IconNode) ExecBin(ctx context.Context, command ...string) ([]byte, []byte, error) {
 	return tn.Exec(ctx, tn.BinCommand(command...), nil)
+}
+
+func (tn *IconNode) ExecRPC(ctx context.Context, command []string) ([]byte, []byte, error) {
+	job := dockerutil.NewImage(tn.logger(), tn.DockerClient, tn.NetworkID, tn.TestName, tn.Image.Repository, tn.Image.Version)
+	opts := dockerutil.ContainerOptions{
+		Env:   nil,
+		Binds: tn.Bind(),
+	}
+	res := job.Run(ctx, command, opts)
+	if err := testutil.WaitForBlocks(ctx, 2, tn); err != nil {
+		return nil, nil, err
+	}
+	return res.Stdout, res.Stderr, res.Err
 }
 
 func (tn *IconNode) Exec(ctx context.Context, cmd []string, env []string) ([]byte, []byte, error) {
@@ -106,58 +128,55 @@ func (tn *IconNode) GetBlockByHeight(ctx context.Context, uri string) error {
 
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
-	out, _, err := tn.ExecBin(ctx,
-		"rpc", "lastblock",
-		"--uri", uri+"/api/v3",
+	_, _, err := tn.ExecRPC(ctx,
+		[]string{"goloop", "rpc", "lastblock",
+			"--uri", uri + "/api/v3"},
 	)
-	fmt.Println(out)
+	fmt.Println(err)
 	return err
 }
 
 func (p *IconNode) CreateNodeContainer(ctx context.Context) error {
-	cmd := []string{"goloop", "-h"}
-	fmt.Printf("{%s} -> '%s'\n", p.Name(), strings.Join(cmd, " "))
-
-	cc, err := p.DockerClient.ContainerCreate(
-		ctx,
-		&container.Config{
-			Image: p.Image.Ref(),
-
-			Entrypoint: []string{},
-			Cmd:        cmd,
-
+	imageRef := p.Image.Ref()
+	containerConfig := &types.ContainerCreateConfig{
+		Config: &container.Config{
+			Image: imageRef,
+			ExposedPorts: nat.PortSet{
+				"8080/tcp": {},
+				"9080/tcp": {},
+			},
 			Hostname: p.HostName(),
-			User:     p.Image.UidGid,
 
 			Labels: map[string]string{dockerutil.CleanupLabel: p.TestName},
 		},
-		&container.HostConfig{
+		HostConfig: &container.HostConfig{
 			Binds:           p.Bind(),
 			PublishAllPorts: true,
 			AutoRemove:      false,
 			DNS:             []string{},
-			// PortBindings: nat.PortMap{
-			// 	"9080/tcp": {
-			// 		nat.PortBinding{
-			// 			HostIP:   "127.0.0.1",
-			// 			HostPort: "9080",
-			// 		},
-			// 	},
-			// },
+			PortBindings: nat.PortMap{
+				"9080/tcp": {
+					nat.PortBinding{
+						HostIP:   "127.0.0.1",
+						HostPort: "9080",
+					},
+				},
+			},
 		},
-		&network.NetworkingConfig{
+		NetworkingConfig: &network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
 				p.NetworkID: {},
 			},
 		},
-		nil,
-		p.Name(),
-	)
+	}
+	cc, err := p.DockerClient.ContainerCreate(ctx, containerConfig.Config, containerConfig.HostConfig, containerConfig.NetworkingConfig, nil, p.Name())
+	if err != nil {
+		panic(err)
+	}
 	if err != nil {
 		return err
 	}
 	p.containerID = cc.ID
-	fmt.Println(p.HostName())
 	return nil
 
 }
@@ -175,12 +194,16 @@ func (p *IconNode) StartContainer(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	a := c.NetworkSettings.Ports
-	fmt.Println(a)
-
 	p.hostRPCPort = dockerutil.GetHostPort(c, rpcPort)
 	p.hostGRPCPort = dockerutil.GetHostPort(c, grpcPort)
 	p.logger().Info("Icon chain node started", zap.String("container", p.Name()), zap.String("rpc_port", p.hostRPCPort))
+
+	uri := "http://" + p.hostRPCPort + "/api/v3"
+	var l iconlog.Logger
+	p.Client = *iconclient.NewClient(uri, l)
+	fmt.Println(p.Client)
+	e := p.Client.Endpoint
+	fmt.Println(e)
 
 	return nil
 }
@@ -195,6 +218,27 @@ func (tn *IconNode) Height(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 
+var flag = true
+
 func (tn *IconNode) FindTxs(ctx context.Context, height uint64) ([]blockdb.Tx, error) {
-	return nil, nil
+	// var eg errgroup.Group
+	var res *icontypes.BlockHeader
+	if flag {
+		time.Sleep(3 * time.Second)
+		flag = false
+	}
+
+	// res, err := tn.Client.GetLastBlock()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(res.BlockHash)
+
+	time.Sleep(2 * time.Second)
+	res, _ = tn.Client.GetBlockHeaderByHeight(int64(height))
+
+	txs := make([]blockdb.Tx, 0, len(res.Result)+2)
+	var newTx blockdb.Tx
+	newTx.Data = []byte(fmt.Sprintf(`{"data":"%s"}`, hex.EncodeToString(res.Result)))
+	return txs, nil
 }

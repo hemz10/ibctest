@@ -62,4 +62,52 @@ func TestIcon(t *testing.T) {
 		SkipPathCreation: false},
 	),
 	)
+
+	icon.ExportState(ctx, 2)
+
+	// Create a new Docker client
+	// cli, err := client.NewClientWithOpts(client.FromEnv)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// // Pull the image from Docker Hub
+	// imageName := "hemz1012/goloop:latest"
+	// reader, err := cli.ImagePull(context.Background(), imageName, types.ImagePullOptions{})
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer reader.Close()
+
+	// // Create a new container
+	// containerConfig := &types.ContainerCreateConfig{
+	// 	Config: &container.Config{
+	// 		Image: imageName,
+	// 		ExposedPorts: nat.PortSet{
+	// 			"8080/tcp": {},
+	// 			"9080/tcp": {},
+	// 		},
+	// 	},
+	// 	HostConfig: &container.HostConfig{
+	// 		PortBindings: nat.PortMap{
+	// 			"9080/tcp": {
+	// 				nat.PortBinding{
+	// 					HostIP:   "127.0.0.1",
+	// 					HostPort: "9080",
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// }
+	// container, err := cli.ContainerCreate(context.Background(), containerConfig.Config, containerConfig.HostConfig, nil, nil, "Icon")
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// // Start the container
+	// if err := cli.ContainerStart(context.Background(), container.ID, types.ContainerStartOptions{}); err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("Docker container running successfully")
 }

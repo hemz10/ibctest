@@ -85,25 +85,41 @@ func (c *IconChain) Initialize(ctx context.Context, testName string, cli *client
 
 // Start sets up everything needed (validators, gentx, fullnodes, peering, additional accounts) for chain to start from genesis.
 func (c *IconChain) Start(testName string, ctx context.Context, additionalGenesisWallets ...ibc.WalletAmount) error {
+	// eg, egCtx := errgroup.WithContext(ctx)
+	// eg.Go(func() error {
+	// 	return c.getFullNode().CreateNodeContainer(egCtx)
+	// })
+	// if err := eg.Wait(); err != nil {
+	// 	return err
+	// }
+
+	// eg, egCtx = errgroup.WithContext(ctx)
+	// eg.Go(func() error {
+	// 	return c.getFullNode().StartContainer(egCtx)
+	// })
+	// if err := eg.Wait(); err != nil {
+	// 	return err
+	// }
+	// return nil
+
+	c.findTxMu.Lock()
+	defer c.findTxMu.Unlock()
 	eg, egCtx := errgroup.WithContext(ctx)
-	eg.Go(func() error {
-		return c.getFullNode().CreateNodeContainer(egCtx)
-	})
-	if err := eg.Wait(); err != nil {
-		return err
+	for _, n := range c.FullNodes {
+		n := n
+		eg.Go(func() error {
+			if err := n.CreateNodeContainer(egCtx); err != nil {
+				return err
+			}
+			return n.StartContainer(ctx)
+		})
 	}
+	return eg.Wait()
+}
 
-	eg, egCtx = errgroup.WithContext(ctx)
-	eg.Go(func() error {
-		return c.getFullNode().StartContainer(egCtx)
-	})
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-	hostRPC := c.GetHostRPCAddress()
-	c.getFullNode().GetBlockByHeight(ctx, hostRPC)
-
-	return nil
+func (c *IconChain) FindTxs(ctx context.Context, height uint64) ([]blockdb.Tx, error) {
+	fn := c.getFullNode()
+	return fn.FindTxs(ctx, height)
 }
 
 // Exec runs an arbitrary command using Chain's docker environment.
@@ -117,12 +133,12 @@ func (c *IconChain) Exec(ctx context.Context, cmd []string, env []string) (stdou
 
 // ExportState exports the chain state at specific height.
 func (c *IconChain) ExportState(ctx context.Context, height int64) (string, error) {
-	panic("not implemented") // TODO: Implement
+	return "", nil
 }
 
 // GetRPCAddress retrieves the rpc address that can be reached by other containers in the docker network.
 func (c *IconChain) GetRPCAddress() string {
-	panic("not implemented") // TODO: Implement
+	return ""
 }
 
 // GetGRPCAddress retrieves the grpc address that can be reached by other containers in the docker network.
@@ -298,13 +314,5 @@ func (c *IconChain) getFullNode() *IconNode {
 		// use first full node
 		return c.FullNodes[0]
 	}
-	// use first validator
-	return c.Validators[0]
-}
-
-func (c *IconChain) FindTxs(ctx context.Context, height uint64) ([]blockdb.Tx, error) {
-	fn := c.getFullNode()
-	c.findTxMu.Lock()
-	defer c.findTxMu.Unlock()
-	return fn.FindTxs(ctx, height)
+	return c.FullNodes[0]
 }
