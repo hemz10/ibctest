@@ -27,7 +27,6 @@ type IconChain struct {
 	cfg           ibc.ChainConfig
 	numValidators int
 	numFullNodes  int
-	Validators    IconNodes
 	FullNodes     IconNodes
 	keyring       keyring.Keyring
 	findTxMu      sync.Mutex
@@ -59,24 +58,10 @@ func (c *IconChain) Initialize(ctx context.Context, testName string, cli *client
 	c.pullImages(ctx, cli)
 	image := chainCfg.Images[0]
 
-	newVals := make(IconNodes, c.numValidators)
-	copy(newVals, c.Validators)
 	newFullNodes := make(IconNodes, c.numFullNodes)
 	copy(newFullNodes, c.FullNodes)
 
 	eg, egCtx := errgroup.WithContext(ctx)
-	for i := len(c.Validators); i < c.numValidators; i++ {
-		i := i
-		eg.Go(func() error {
-			val, err := c.NewChainNode(egCtx, testName, cli, networkID, image, true)
-			if err != nil {
-				return err
-			}
-			val.Index = i
-			newVals[i] = val
-			return nil
-		})
-	}
 	for i := len(c.FullNodes); i < c.numFullNodes; i++ {
 		i := i
 		eg.Go(func() error {
@@ -94,7 +79,6 @@ func (c *IconChain) Initialize(ctx context.Context, testName string, cli *client
 	}
 	c.findTxMu.Lock()
 	defer c.findTxMu.Unlock()
-	c.Validators = newVals
 	c.FullNodes = newFullNodes
 	return nil
 }
