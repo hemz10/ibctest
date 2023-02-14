@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -133,12 +135,14 @@ func (c *IconChain) Exec(ctx context.Context, cmd []string, env []string) (stdou
 
 // ExportState exports the chain state at specific height.
 func (c *IconChain) ExportState(ctx context.Context, height int64) (string, error) {
+	c.getFullNode().GetBlockByHeight(ctx, height)
 	return "", nil
+
 }
 
 // GetRPCAddress retrieves the rpc address that can be reached by other containers in the docker network.
 func (c *IconChain) GetRPCAddress() string {
-	return ""
+	return c.getFullNode().hostRPCPort
 }
 
 // GetGRPCAddress retrieves the grpc address that can be reached by other containers in the docker network.
@@ -200,12 +204,15 @@ func (c *IconChain) Height(ctx context.Context) (uint64, error) {
 
 // GetBalance fetches the current balance for a specific account address and denom.
 func (c *IconChain) GetBalance(ctx context.Context, address string, denom string) (int64, error) {
-	panic("not implemented") // TODO: Implement
+	return c.getFullNode().GetBalance(ctx, address)
 }
 
 // GetGasFeesInNativeDenom gets the fees in native denom for an amount of spent gas.
+// Need to Verify, this always returns Zero
 func (c *IconChain) GetGasFeesInNativeDenom(gasPaid int64) int64 {
-	panic("not implemented") // TODO: Implement
+	gasPrice, _ := strconv.ParseFloat(strings.Replace(c.cfg.GasPrices, c.cfg.Denom, "", 1), 64)
+	fees := float64(gasPaid) * gasPrice
+	return int64(fees)
 }
 
 // Acknowledgements returns all acknowledgements in a block at height.

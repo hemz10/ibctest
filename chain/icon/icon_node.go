@@ -2,7 +2,6 @@ package icon
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"path"
 	"strings"
@@ -118,21 +117,15 @@ func (tn *IconNode) HomeDir() string {
 	return path.Join("/var/icon-chain", tn.Chain.Config().Name)
 }
 
-func (tn *IconNode) GetBlockByHeight(ctx context.Context, uri string) error {
-	// cmd := []string{
-	// 	"goloop", "rpc", "blockbyheight", "105", "--uri", uri + "/api/v3",
-	// }
-	// StdOut, StdErr, Err := tn.Exec(ctx, cmd, nil)
-	// fmt.Println(StdOut, StdErr)
-	// return Err
-
-	tn.lock.Lock()
-	defer tn.lock.Unlock()
-	_, _, err := tn.ExecRPC(ctx,
-		[]string{"goloop", "rpc", "lastblock",
-			"--uri", uri + "/api/v3"},
+func (in *IconNode) GetBlockByHeight(ctx context.Context, height int64) error {
+	in.lock.Lock()
+	defer in.lock.Unlock()
+	uri := "http://" + in.hostRPCPort + "/api/v3"
+	out, _, err := in.ExecBin(ctx,
+		"rpc", "blockbyheight", fmt.Sprint(height),
+		"--uri", uri,
 	)
-	fmt.Println(err)
+	fmt.Println(string(out))
 	return err
 }
 
@@ -157,7 +150,7 @@ func (p *IconNode) CreateNodeContainer(ctx context.Context) error {
 			PortBindings: nat.PortMap{
 				"9080/tcp": {
 					nat.PortBinding{
-						HostIP:   "127.0.0.1",
+						HostIP:   "172.17.0.1",
 						HostPort: "9080",
 					},
 				},
@@ -201,9 +194,6 @@ func (p *IconNode) StartContainer(ctx context.Context) error {
 	uri := "http://" + p.hostRPCPort + "/api/v3"
 	var l iconlog.Logger
 	p.Client = *iconclient.NewClient(uri, l)
-	fmt.Println(p.Client)
-	e := p.Client.Endpoint
-	fmt.Println(e)
 
 	return nil
 }
@@ -215,30 +205,46 @@ const (
 )
 
 func (tn *IconNode) Height(ctx context.Context) (uint64, error) {
-	return 0, nil
+	res, err := tn.Client.GetLastBlock()
+	return uint64(res.Height), err
 }
 
 var flag = true
 
 func (tn *IconNode) FindTxs(ctx context.Context, height uint64) ([]blockdb.Tx, error) {
-	// var eg errgroup.Group
-	var res *icontypes.BlockHeader
 	if flag {
 		time.Sleep(3 * time.Second)
 		flag = false
 	}
 
-	// res, err := tn.Client.GetLastBlock()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(res.BlockHash)
-
 	time.Sleep(2 * time.Second)
-	res, _ = tn.Client.GetBlockHeaderByHeight(int64(height))
+	blockHeight := icontypes.BlockHeightParam{Height: icontypes.NewHexInt(int64(height))}
+	res, _ := tn.Client.GetBlockByHeight(&blockHeight)
 
-	txs := make([]blockdb.Tx, 0, len(res.Result)+2)
+	txs := make([]blockdb.Tx, 0, len(res.NormalTransactions)+2)
 	var newTx blockdb.Tx
-	newTx.Data = []byte(fmt.Sprintf(`{"data":"%s"}`, hex.EncodeToString(res.Result)))
+	for _, tx := range res.NormalTransactions {
+		newTx.Data = []byte(fmt.Sprintf(`{"data":"%s"}`, tx.Data))
+	}
+
+	// To DO Add events from block if any to newTx.Events.
 	return txs, nil
+}
+
+func (in *IconNode) GetBalance(ctx context.Context, address string) (int64, error) {
+	addr := icontypes.AddressParam{Address: icontypes.Address(address)}
+	bal, _ := in.Client.GetBalance(&addr)
+	return bal.Int64(), nil
+}
+
+func (in *IconNode) GetLastBlock(ctx context.Context, height int64) error {
+	in.lock.Lock()
+	defer in.lock.Unlock()
+	uri := "http://" + in.hostRPCPort + "/api/v3"
+	out, _, err := in.ExecBin(ctx,
+		"rpc", "lastblock",
+		"--uri", uri,
+	)
+	fmt.Println(string(out))
+	return err
 }
