@@ -16,9 +16,9 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	volumetypes "github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
-	"github.com/strangelove-ventures/ibctest/v6/ibc"
-	"github.com/strangelove-ventures/ibctest/v6/internal/blockdb"
-	"github.com/strangelove-ventures/ibctest/v6/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
+	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -135,8 +135,8 @@ func (c *IconChain) Exec(ctx context.Context, cmd []string, env []string) (stdou
 
 // ExportState exports the chain state at specific height.
 func (c *IconChain) ExportState(ctx context.Context, height int64) (string, error) {
-	c.getFullNode().GetBlockByHeight(ctx, height)
-	return "", nil
+	block, err := c.getFullNode().GetBlockByHeight(ctx, height)
+	return block, err
 
 }
 
@@ -208,7 +208,6 @@ func (c *IconChain) GetBalance(ctx context.Context, address string, denom string
 }
 
 // GetGasFeesInNativeDenom gets the fees in native denom for an amount of spent gas.
-// Need to Verify, this always returns Zero
 func (c *IconChain) GetGasFeesInNativeDenom(gasPaid int64) int64 {
 	gasPrice, _ := strconv.ParseFloat(strings.Replace(c.cfg.GasPrices, c.cfg.Denom, "", 1), 64)
 	fees := float64(gasPaid) * gasPrice
@@ -322,4 +321,9 @@ func (c *IconChain) getFullNode() *IconNode {
 		return c.FullNodes[0]
 	}
 	return c.FullNodes[0]
+}
+
+// InstantiateContract takes a file path to smart contract and initialization message and returns the instantiated contract address.
+func (c *IconChain) InstantiateContract(ctx context.Context, keyName string, amount ibc.WalletAmount, fileName string, initMessage string, needsNoAdminFlag bool) (string, error) {
+	return c.getFullNode().StoreContract(ctx, keyName, fileName, initMessage)
 }

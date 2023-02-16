@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
-	"github.com/strangelove-ventures/ibctest/v6"
-	"github.com/strangelove-ventures/ibctest/v6/ibc"
-	"github.com/strangelove-ventures/ibctest/v6/testreporter"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -24,14 +24,14 @@ type chain struct {
 	source, dest ibc.Chain
 	t            *testing.T
 	r            ibc.Relayer
-	ic           *ibctest.Interchain
+	ic           *interchaintest.Interchain
 	network      string
 	client       *client.Client
 	ctx          context.Context
 }
 
 var (
-	chains = []*ibctest.ChainSpec{
+	chains = []*interchaintest.ChainSpec{
 		// Source chain
 		{Name: "gaia", Version: "v7.0.0", ChainConfig: ibc.ChainConfig{
 			GasPrices: "0.0uatom",
@@ -57,20 +57,20 @@ var (
 )
 
 func (c *chain) createChain() error {
-	cf := ibctest.NewBuiltinChainFactory(zaptest.NewLogger(c.t), chains)
+	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(c.t), chains)
 	if cf == nil {
 		return fmt.Errorf("chain factory failed")
 	}
 	chains, _ := cf.Chains(c.t.Name())
 	c.source, c.dest = chains[0], chains[1]
-	c.client, c.network = ibctest.DockerSetup(c.t)
-	c.r = ibctest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(c.t)).Build(
+	c.client, c.network = interchaintest.DockerSetup(c.t)
+	c.r = interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(c.t)).Build(
 		c.t, c.client, c.network)
-	c.ic = ibctest.NewInterchain().
+	c.ic = interchaintest.NewInterchain().
 		AddChain(c.source).
 		AddChain(c.dest).
 		AddRelayer(c.r, "relayer").
-		AddLink(ibctest.InterchainLink{
+		AddLink(interchaintest.InterchainLink{
 			Chain1:  c.source,
 			Chain2:  c.dest,
 			Relayer: c.r,
@@ -78,18 +78,18 @@ func (c *chain) createChain() error {
 		})
 
 	// Log location
-	f, err := ibctest.CreateLogFile(fmt.Sprintf("%d.json", time.Now().Unix()))
+	f, err := interchaintest.CreateLogFile(fmt.Sprintf("%d.json", time.Now().Unix()))
 	require.NoError(c.t, err)
 	// Reporter/logs
 	rep = testreporter.NewReporter(f)
 	eRep = rep.RelayerExecReporter(c.t)
 
 	// Build interchain
-	require.NoError(c.t, c.ic.Build(c.ctx, eRep, ibctest.InterchainBuildOptions{
+	require.NoError(c.t, c.ic.Build(c.ctx, eRep, interchaintest.InterchainBuildOptions{
 		TestName:          c.t.Name(),
 		Client:            c.client,
 		NetworkID:         c.network,
-		BlockDatabaseFile: ibctest.DefaultBlockDatabaseFilepath(),
+		BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 
 		SkipPathCreation: false},
 	),
@@ -98,20 +98,20 @@ func (c *chain) createChain() error {
 }
 
 func (c *chain) relaySetup() error {
-	cf := ibctest.NewBuiltinChainFactory(zaptest.NewLogger(c.t), chains)
+	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(c.t), chains)
 	if cf == nil {
 		return fmt.Errorf("chain factory failed")
 	}
 	chains, _ := cf.Chains(c.t.Name())
 	c.source, c.dest = chains[0], chains[1]
-	c.client, c.network = ibctest.DockerSetup(c.t)
-	c.r = ibctest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(c.t)).Build(
+	c.client, c.network = interchaintest.DockerSetup(c.t)
+	c.r = interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(c.t)).Build(
 		c.t, c.client, c.network)
-	c.ic = ibctest.NewInterchain().
+	c.ic = interchaintest.NewInterchain().
 		AddChain(c.source).
 		AddChain(c.dest).
 		AddRelayer(c.r, "relayer").
-		AddLink(ibctest.InterchainLink{
+		AddLink(interchaintest.InterchainLink{
 			Chain1:  c.source,
 			Chain2:  c.dest,
 			Relayer: c.r,
@@ -119,18 +119,18 @@ func (c *chain) relaySetup() error {
 		})
 
 	// Log location
-	f, err := ibctest.CreateLogFile(fmt.Sprintf("%d.json", time.Now().Unix()))
+	f, err := interchaintest.CreateLogFile(fmt.Sprintf("%d.json", time.Now().Unix()))
 	require.NoError(c.t, err)
 	// Reporter/logs
 	rep = testreporter.NewReporter(f)
 	eRep = rep.RelayerExecReporter(c.t)
 
 	// Build interchain
-	require.NoError(c.t, c.ic.Build(c.ctx, eRep, ibctest.InterchainBuildOptions{
+	require.NoError(c.t, c.ic.Build(c.ctx, eRep, interchaintest.InterchainBuildOptions{
 		TestName:          c.t.Name(),
 		Client:            c.client,
 		NetworkID:         c.network,
-		BlockDatabaseFile: ibctest.DefaultBlockDatabaseFilepath(),
+		BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 
 		SkipPathCreation: true},
 	),

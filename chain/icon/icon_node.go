@@ -3,7 +3,9 @@ package icon
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -16,10 +18,10 @@ import (
 	iconclient "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon"
 	icontypes "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
 	iconlog "github.com/icon-project/icon-bridge/common/log"
-	"github.com/strangelove-ventures/ibctest/v6/ibc"
-	"github.com/strangelove-ventures/ibctest/v6/internal/blockdb"
-	"github.com/strangelove-ventures/ibctest/v6/internal/dockerutil"
-	"github.com/strangelove-ventures/ibctest/v6/testutil"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
+	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"go.uber.org/zap"
 )
 
@@ -117,16 +119,16 @@ func (tn *IconNode) HomeDir() string {
 	return path.Join("/var/icon-chain", tn.Chain.Config().Name)
 }
 
-func (in *IconNode) GetBlockByHeight(ctx context.Context, height int64) error {
+func (in *IconNode) GetBlockByHeight(ctx context.Context, height int64) (string, error) {
 	in.lock.Lock()
 	defer in.lock.Unlock()
 	uri := "http://" + in.hostRPCPort + "/api/v3"
-	out, _, err := in.ExecBin(ctx,
+	block, _, err := in.ExecBin(ctx,
 		"rpc", "blockbyheight", fmt.Sprint(height),
 		"--uri", uri,
 	)
-	fmt.Println(string(out))
-	return err
+	fmt.Println(string(block))
+	return string(block), err
 }
 
 func (p *IconNode) CreateNodeContainer(ctx context.Context) error {
@@ -227,7 +229,8 @@ func (tn *IconNode) FindTxs(ctx context.Context, height uint64) ([]blockdb.Tx, e
 		newTx.Data = []byte(fmt.Sprintf(`{"data":"%s"}`, tx.Data))
 	}
 
-	// To DO Add events from block if any to newTx.Events.
+	// ToDo Add events from block if any to newTx.Events.
+	// Event is an alternative representation of tendermint/abci/types.Event
 	return txs, nil
 }
 
@@ -247,4 +250,65 @@ func (in *IconNode) GetLastBlock(ctx context.Context, height int64) error {
 	)
 	fmt.Println(string(out))
 	return err
+}
+
+func (in *IconNode) StoreContract(ctx context.Context, keyName string, fileName, initMessage string) (string, error) {
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+
+	_, file := filepath.Split(fileName)
+	fw := dockerutil.NewFileWriter(in.logger(), in.DockerClient, in.TestName)
+	if err := fw.WriteFile(ctx, in.VolumeName, file, content); err != nil {
+		return "", fmt.Errorf("writing contract file to docker volume: %w", err)
+	}
+
+	hash, err := in.ExecTx(ctx, keyName, initMessage, "goloop", "rpc", "sendtx", "deploy")
+	if err != nil {
+		return "", err
+	}
+
+	txHash := icontypes.TransactionHashParam{Hash: icontypes.NewHexBytes([]byte(hash))}
+	txResult, _ := in.Client.GetTransactionResult(&txHash)
+	return string(txResult.SCOREAddress), nil
+
+}
+
+// TxCommand is a helper to retrieve a full command for broadcasting a tx
+// with the chain node binary.
+func (in *IconNode) TxCommand(keyName string, initMessage string, command ...string) []string {
+	command = append([]string{"tx"}, command...)
+	return in.NodeCommand(append(command,
+		"--key_store", "/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json",
+		"--key_password gochain",
+		"--step_limit 5000000000",
+		"--content_type application/java",
+		"--param", initMessage,
+	)...)
+}
+
+// ExecTx executes a transaction, waits for 2 blocks if successful, then returns the tx hash.
+func (in *IconNode) ExecTx(ctx context.Context, keyName string, initMessage string, command ...string) (string, error) {
+	in.lock.Lock()
+	defer in.lock.Unlock()
+
+	stdout, _, err := in.Exec(ctx, in.TxCommand(keyName, initMessage, command...), nil)
+	if err != nil {
+		return "", err
+	}
+	return string(stdout), nil
+}
+
+// NodeCommand is a helper to retrieve a full command for a chain node binary.
+// when interactions with the RPC endpoint are necessary.
+// For example, if chain node binary is `gaiad`, and desired command is `gaiad keys show key1`,
+// pass ("keys", "show", "key1") for command to return the full command.
+// Will include additional flags for node URL, home directory, and chain ID.
+func (in *IconNode) NodeCommand(command ...string) []string {
+	command = in.BinCommand(command...)
+	return append(command,
+		"--uri", fmt.Sprintf("http://172.17.0.1:%s/api/v3", in.HostName()),
+		"--nid", in.NetworkID,
+	)
 }

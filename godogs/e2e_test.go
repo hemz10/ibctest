@@ -7,8 +7,8 @@ import (
 
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	"github.com/cucumber/godog"
-	"github.com/strangelove-ventures/ibctest/v6"
-	"github.com/strangelove-ventures/ibctest/v6/ibc"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +24,7 @@ func (c *chain) coupleOfIBCChainsRunning() error {
 }
 
 func (c *chain) userWalletIsFunded() error {
-	users := ibctest.GetAndFundTestUsers(c.t, c.ctx, "default", fundAmount, c.source, c.dest)
+	users := interchaintest.GetAndFundTestUsers(c.t, c.ctx, "default", fundAmount, c.source, c.dest)
 	sourceUser = users[0]
 	destUser = users[1]
 	sourceUserBalInitial, _ = c.source.GetBalance(c.ctx, sourceUser.FormattedAddress(), c.source.Config().Denom)

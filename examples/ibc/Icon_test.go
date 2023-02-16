@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	ibctest "github.com/strangelove-ventures/ibctest/v6"
-	"github.com/strangelove-ventures/ibctest/v6/ibc"
-	"github.com/strangelove-ventures/ibctest/v6/testreporter"
+	ibctest "github.com/strangelove-ventures/interchaintest/v6"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -31,7 +31,7 @@ func TestIcon(t *testing.T) {
 			Bin:            "goloop",
 			Bech32Prefix:   "icon",
 			Denom:          "icx",
-			GasPrices:      "0.00icx",
+			GasPrices:      "0.001icx",
 			GasAdjustment:  1.3,
 			TrustingPeriod: "508h",
 			NoHostMount:    false},
@@ -69,5 +69,7 @@ func TestIcon(t *testing.T) {
 
 	bal, _ := icon.GetBalance(ctx, "hxc088a2e09809ba05b75e06ed247935020a2bc0c5", "icx")
 	fmt.Println(bal, " icx")
-	fmt.Println(icon.GetGasFeesInNativeDenom(29028))
+	fmt.Println(icon.GetGasFeesInNativeDenom(100000000000000))
+
+	icon.I
 }

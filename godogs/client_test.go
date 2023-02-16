@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/cucumber/godog"
-	"github.com/strangelove-ventures/ibctest/v6/ibc"
-	"github.com/strangelove-ventures/ibctest/v6/testutil"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 )
 
 func (c *chain) clientShouldBeCreatedOnBothChains() error {
