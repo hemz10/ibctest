@@ -2,6 +2,7 @@ package icon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -57,13 +58,13 @@ func (in *IconNode) Name() string {
 	return fmt.Sprintf("%s-%s-%d-%s", in.Chain.Config().ChainID, nodeType, in.Index, dockerutil.SanitizeContainerName(in.TestName))
 }
 
-func (tn *IconNode) CreateKey(ctx context.Context, name string) error {
+func (tn *IconNode) CreateKey(ctx context.Context, password string) error {
 	tn.lock.Lock()
 	defer tn.lock.Unlock()
 
 	_, _, err := tn.ExecBin(ctx,
 		"ks", "gen",
-		"--password", name,
+		"--password", password,
 	)
 	return err
 }
@@ -252,52 +253,68 @@ func (in *IconNode) GetLastBlock(ctx context.Context, height int64) error {
 	return err
 }
 
-func (in *IconNode) StoreContract(ctx context.Context, keyName string, fileName, initMessage string) (string, error) {
-	content, err := os.ReadFile(fileName)
+func (in *IconNode) DeployContract(ctx context.Context, scorePath, keystorePath, initMessage string) (string, error) {
+
+	// Write Contract file to Docker volume
+	_, score := filepath.Split(scorePath)
+	err := in.CopyFile(ctx, scorePath, score)
+	if err != nil {
+		return "", fmt.Errorf("error copying keystore to Docker volume: %w", err)
+	}
+
+	// Deploy the contract
+	hash, err := in.ExecTx(ctx, initMessage, path.Join(in.HomeDir(), score), keystorePath)
 	if err != nil {
 		return "", err
 	}
 
-	_, file := filepath.Split(fileName)
-	fw := dockerutil.NewFileWriter(in.logger(), in.DockerClient, in.TestName)
-	if err := fw.WriteFile(ctx, in.VolumeName, file, content); err != nil {
-		return "", fmt.Errorf("writing contract file to docker volume: %w", err)
-	}
+	time.Sleep(3 * time.Second)
+	// Get Score Address
+	trResult, _ := in.TransactionResult(ctx, hash)
+	return string(trResult.SCOREAddress), err
 
-	hash, err := in.ExecTx(ctx, keyName, initMessage, "goloop", "rpc", "sendtx", "deploy")
+}
+
+func (in *IconNode) TransactionResult(ctx context.Context, hash string) (icontypes.TransactionResult, error) {
+	var result icontypes.TransactionResult
+	uri := "http://" + in.hostRPCPort + "/api/v3"
+	out, _, _ := in.ExecBin(ctx, "rpc", "txresult", hash, "--uri", uri)
+	json.Unmarshal(out, &result)
+	return result, nil
+}
+
+// ExecTx executes a transaction, waits for 2 blocks if successful, then returns the tx hash.
+func (in *IconNode) ExecTx(ctx context.Context, initMessage string, filePath string, keystorePath string, command ...string) (string, error) {
+	var output string
+	in.lock.Lock()
+	defer in.lock.Unlock()
+	stdout, _, err := in.Exec(ctx, in.TxCommand(ctx, initMessage, filePath, keystorePath, command...), nil)
 	if err != nil {
 		return "", err
 	}
-
-	txHash := icontypes.TransactionHashParam{Hash: icontypes.NewHexBytes([]byte(hash))}
-	txResult, _ := in.Client.GetTransactionResult(&txHash)
-	return string(txResult.SCOREAddress), nil
-
+	json.Unmarshal(stdout, &output)
+	return output, nil
 }
 
 // TxCommand is a helper to retrieve a full command for broadcasting a tx
 // with the chain node binary.
-func (in *IconNode) TxCommand(keyName string, initMessage string, command ...string) []string {
-	command = append([]string{"tx"}, command...)
+func (in *IconNode) TxCommand(ctx context.Context, initMessage, filePath, keystorePath string, command ...string) []string {
+	// Write keystore file to Docker volume
+	_, key := filepath.Split(keystorePath)
+	err := in.CopyFile(ctx, keystorePath, key)
+	if err != nil {
+		return []string{"error copying keystore to Docker volume"}
+	}
+	keystore := path.Join(in.HomeDir(), key)
+
+	command = append([]string{"rpc", "sendtx", "deploy", filePath}, command...)
 	return in.NodeCommand(append(command,
-		"--key_store", "/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json",
-		"--key_password gochain",
-		"--step_limit 5000000000",
-		"--content_type application/java",
+		"--key_store", keystore,
+		"--key_password", "gochain",
+		"--step_limit", "5000000000",
+		"--content_type", "application/java",
 		"--param", initMessage,
 	)...)
-}
-
-// ExecTx executes a transaction, waits for 2 blocks if successful, then returns the tx hash.
-func (in *IconNode) ExecTx(ctx context.Context, keyName string, initMessage string, command ...string) (string, error) {
-	in.lock.Lock()
-	defer in.lock.Unlock()
-
-	stdout, _, err := in.Exec(ctx, in.TxCommand(keyName, initMessage, command...), nil)
-	if err != nil {
-		return "", err
-	}
-	return string(stdout), nil
 }
 
 // NodeCommand is a helper to retrieve a full command for a chain node binary.
@@ -308,7 +325,77 @@ func (in *IconNode) ExecTx(ctx context.Context, keyName string, initMessage stri
 func (in *IconNode) NodeCommand(command ...string) []string {
 	command = in.BinCommand(command...)
 	return append(command,
-		"--uri", fmt.Sprintf("http://172.17.0.1:%s/api/v3", in.HostName()),
-		"--nid", in.NetworkID,
+		"--uri", fmt.Sprintf("http://%s/api/v3", in.hostRPCPort),
+		"--nid", "0xc5addf",
 	)
+}
+
+// CopyFile adds a file from the host filesystem to the docker filesystem
+// relPath describes the location of the file in the docker volume relative to
+// the home directory
+func (tn *IconNode) CopyFile(ctx context.Context, srcPath, dstPath string) error {
+	content, err := os.ReadFile(srcPath)
+	if err != nil {
+		return err
+	}
+	return tn.WriteFile(ctx, content, dstPath)
+}
+
+// WriteFile accepts file contents in a byte slice and writes the contents to
+// the docker filesystem. relPath describes the location of the file in the
+// docker volume relative to the home directory
+func (tn *IconNode) WriteFile(ctx context.Context, content []byte, relPath string) error {
+	fw := dockerutil.NewFileWriter(tn.logger(), tn.DockerClient, tn.TestName)
+	return fw.WriteFile(ctx, tn.VolumeName, relPath, content)
+}
+
+func (in *IconNode) QueryContract(ctx context.Context, scoreAddress, methodName, params string) (string, error) {
+	uri := "http://" + in.hostRPCPort + "/api/v3"
+	if params != "" {
+		out, _, _ := in.ExecBin(ctx, "rpc", "call", "--to", scoreAddress, "--method", methodName, "--param", params, "--uri", uri)
+		return string(out), nil
+	} else {
+		out, _, _ := in.ExecBin(ctx, "rpc", "call", "--to", scoreAddress, "--method", methodName, "--uri", uri)
+		return string(out), nil
+	}
+
+}
+
+func (in *IconNode) ExecuteContract(ctx context.Context, scoreAddress, methodName, keyStorePath, params string) (string, error) {
+	hash, err := in.ExecCallTx(ctx, scoreAddress, methodName, keyStorePath, params)
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
+}
+
+func (in *IconNode) ExecCallTx(ctx context.Context, scoreAddress, methodName, keystorePath, params string) (string, error) {
+	var output string
+	in.lock.Lock()
+	defer in.lock.Unlock()
+	stdout, _, err := in.Exec(ctx, in.ExecCallTxCommand(ctx, scoreAddress, methodName, keystorePath, params), nil)
+	if err != nil {
+		return "", err
+	}
+	json.Unmarshal(stdout, &output)
+	return output, nil
+}
+
+func (in *IconNode) ExecCallTxCommand(ctx context.Context, scoreAddress, methodName, keystorePath, params string) []string {
+	// Write keystore file to Docker volume
+	_, key := filepath.Split(keystorePath)
+	err := in.CopyFile(ctx, keystorePath, key)
+	if err != nil {
+		return []string{"error copying keystore to Docker volume"}
+	}
+	keystore := path.Join(in.HomeDir(), key)
+	command := []string{"rpc", "sendtx", "call"}
+	return in.NodeCommand(append(command,
+		"--to", scoreAddress,
+		"--method", methodName,
+		"--key_store", keystore,
+		"--key_password", "gochain",
+		"--step_limit", "5000000000",
+		"--param", params,
+	)...)
 }

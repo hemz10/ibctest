@@ -16,9 +16,11 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	volumetypes "github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	icontypes "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
 	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
+	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -169,8 +171,8 @@ func (c *IconChain) HomeDir() string {
 }
 
 // CreateKey creates a test key in the "user" node (either the first fullnode or the first validator if no fullnodes).
-func (c *IconChain) CreateKey(ctx context.Context, keyName string) error {
-	return c.getFullNode().CreateKey(ctx, keyName)
+func (c *IconChain) CreateKey(ctx context.Context, password string) error {
+	return c.getFullNode().CreateKey(ctx, password)
 }
 
 // RecoverKey recovers an existing user from a given mnemonic.
@@ -324,6 +326,23 @@ func (c *IconChain) getFullNode() *IconNode {
 }
 
 // InstantiateContract takes a file path to smart contract and initialization message and returns the instantiated contract address.
-func (c *IconChain) InstantiateContract(ctx context.Context, keyName string, amount ibc.WalletAmount, fileName string, initMessage string, needsNoAdminFlag bool) (string, error) {
-	return c.getFullNode().StoreContract(ctx, keyName, fileName, initMessage)
+func (c *IconChain) DeployContract(ctx context.Context, scorePath, keystorePath string, initMessage string) (string, error) {
+	return c.getFullNode().DeployContract(ctx, scorePath, keystorePath, initMessage)
+}
+
+func (c *IconChain) QueryContract(ctx context.Context, scoreAddress, methodName, params string) (string, error) {
+	c.WaitForBlocks(ctx, 3)
+	return c.getFullNode().QueryContract(ctx, scoreAddress, methodName, params)
+}
+
+func (c *IconChain) ExecuteContract(ctx context.Context, scoreAddress, keystorePath, methodName, params string) (string, error) {
+	return c.getFullNode().ExecuteContract(ctx, scoreAddress, methodName, keystorePath, params)
+}
+
+func (c *IconChain) WaitForBlocks(ctx context.Context, numBlocks int) {
+	testutil.WaitForBlocks(ctx, numBlocks, c.getFullNode())
+}
+
+func (c *IconChain) GetTransactionResult(ctx context.Context, hash string) (icontypes.TransactionResult, error) {
+	return c.getFullNode().TransactionResult(ctx, hash)
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ibctest "github.com/strangelove-ventures/interchaintest/v6"
+	iconchain "github.com/strangelove-ventures/interchaintest/v6/chain/icon"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/stretchr/testify/require"
@@ -71,5 +72,18 @@ func TestIcon(t *testing.T) {
 	fmt.Println(bal, " icx")
 	fmt.Println(icon.GetGasFeesInNativeDenom(100000000000000))
 
-	icon.I
+	iconChain := icon.(*iconchain.IconChain)
+	scoreAddress, _ := iconChain.DeployContract(ctx, "/home/dell/practice/ibc-bdd/ibctest/chain/icon/BMC-0.1.0-optimized.jar",
+		"/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json",
+		"_net=btp://0x1.icon/")
+	fmt.Println("Score Address:", scoreAddress)
+	output, _ := iconChain.QueryContract(ctx, scoreAddress, "getOwners", "")
+	fmt.Println(output)
+	time.Sleep(1 * time.Second)
+	hash, _ := iconChain.ExecuteContract(ctx, scoreAddress, "/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json", "addOwner", "_addr=hxc088a2e09809ba05b75e06ed247935020a2bc0c5")
+	fmt.Println(hash)
+	output, _ = iconChain.QueryContract(ctx, scoreAddress, "getOwners", "")
+	fmt.Println(output)
+	iconChain.WaitForBlocks(ctx, 3)
+
 }
