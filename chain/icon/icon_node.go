@@ -11,6 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"interchaintest/internal/blockdb"
+	"interchaintest/internal/dockerutil"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -20,8 +23,6 @@ import (
 	icontypes "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
 	iconlog "github.com/icon-project/icon-bridge/common/log"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"go.uber.org/zap"
 )
@@ -43,9 +44,14 @@ type IconNode struct {
 	Validator    bool
 	lock         sync.Mutex
 	Address      string
+	Config       Config
 }
 
 type IconNodes []*IconNode
+
+func (in *IconNode) LoadConfig() {
+	in.Config = LoadConfig("/home/dell/practice/ibc-bdd/ibctest/godogs/config.json")
+}
 
 // Name of the test node container
 func (in *IconNode) Name() string {
@@ -121,15 +127,28 @@ func (tn *IconNode) HomeDir() string {
 }
 
 func (in *IconNode) GetBlockByHeight(ctx context.Context, height int64) (string, error) {
-	in.lock.Lock()
-	defer in.lock.Unlock()
-	uri := "http://" + in.hostRPCPort + "/api/v3"
-	block, _, err := in.ExecBin(ctx,
-		"rpc", "blockbyheight", fmt.Sprint(height),
-		"--uri", uri,
-	)
-	fmt.Println(string(block))
-	return string(block), err
+	if in.Config.Environment == "local" {
+		in.lock.Lock()
+		defer in.lock.Unlock()
+		uri := "http://" + in.hostRPCPort + "/api/v3"
+		block, _, err := in.ExecBin(ctx,
+			"rpc", "blockbyheight", fmt.Sprint(height),
+			"--uri", uri,
+		)
+		fmt.Println(string(block))
+		return string(block), err
+	} else {
+		in.LoadConfig()
+		in.lock.Lock()
+		defer in.lock.Unlock()
+		block, _, err := in.ExecBin(ctx,
+			"rpc", "blockbyheight", fmt.Sprint(height),
+			"--uri", in.Config.URL,
+		)
+		fmt.Println(string(block))
+		return string(block), err
+	}
+
 }
 
 func (p *IconNode) CreateNodeContainer(ctx context.Context) error {

@@ -1,0 +1,12 @@
+{
+    "environment": "local",
+    "url": "http://localhost",
+    "keystore_file": "/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json",
+    "keystore_password": "gochain",
+    "chain_id": "icon-1",
+    "bech32_prefix": "icon",
+    "gas_adjustment": 1.3,
+    "gas_price": "0.001icx",
+    "bin": "goloop",
+    "trusting_period": "508h"
+}

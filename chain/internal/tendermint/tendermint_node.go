@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -15,7 +17,6 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/hashicorp/go-version"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/p2p"

@@ -1,4 +1,4 @@
-module github.com/strangelove-ventures/interchaintest/v6
+module interchaintest
 
 go 1.18
 
@@ -24,6 +24,7 @@ require (
 	github.com/libp2p/go-libp2p-core v0.15.1
 	github.com/mr-tron/base58 v1.2.0
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
+	github.com/strangelove-ventures/interchaintest/v6 v6.0.0-20230222020454-110aa579a5a8
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.24
 	go.uber.org/multierr v1.8.0
@@ -63,6 +64,7 @@ require (
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
 	github.com/zondax/ledger-go v0.14.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 )
 
 //require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.10
@@ -85,7 +87,6 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/btcsuite/btcd v0.22.1 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
@@ -124,7 +125,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.6.0 // indirect
@@ -201,7 +201,7 @@ require (
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.14.0 // indirect
+	github.com/spf13/viper v1.14.0
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220614013038-64ee5596c38a // indirect
 	github.com/tendermint/btcd v0.1.1 // indirect
@@ -214,7 +214,6 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/goleak v1.1.12 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
@@ -230,7 +229,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gotest.tools/v3 v3.3.0 // indirect
 	lukechampine.com/blake3 v1.1.6 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.36.0 // indirect

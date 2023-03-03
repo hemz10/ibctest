@@ -7,12 +7,13 @@ import (
 	"strconv"
 	"testing"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/icza/dyno"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/relayer"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"

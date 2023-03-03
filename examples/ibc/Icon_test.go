@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
+	iconchain "interchaintest/chain/icon"
+
 	ibctest "github.com/strangelove-ventures/interchaintest/v6"
-	iconchain "github.com/strangelove-ventures/interchaintest/v6/chain/icon"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/stretchr/testify/require"

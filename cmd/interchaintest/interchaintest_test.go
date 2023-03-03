@@ -12,13 +12,14 @@ import (
 	"testing"
 	"time"
 
+	"interchaintest/internal/blockdb"
+	blockdbtui "interchaintest/internal/blockdb/tui"
+	"interchaintest/internal/version"
+
 	"github.com/rivo/tview"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
 	"github.com/strangelove-ventures/interchaintest/v6/conformance"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
-	blockdbtui "github.com/strangelove-ventures/interchaintest/v6/internal/blockdb/tui"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/version"
 	"github.com/strangelove-ventures/interchaintest/v6/relayer"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"go.uber.org/zap"

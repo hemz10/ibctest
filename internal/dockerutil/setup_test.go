@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"interchaintest/internal/dockerutil"
+	"interchaintest/internal/mocktesting"
+
 	volumetypes "github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/errdefs"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/mocktesting"
 	"github.com/stretchr/testify/require"
 )
 

@@ -9,6 +9,9 @@ import (
 	"strings"
 	"sync"
 
+	"interchaintest/internal/blockdb"
+	"interchaintest/internal/dockerutil"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -18,8 +21,6 @@ import (
 	"github.com/docker/docker/client"
 	icontypes "github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"

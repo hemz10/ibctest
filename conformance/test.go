@@ -35,11 +35,12 @@ import (
 	"testing"
 	"time"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/docker/docker/client"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/label"
 	"github.com/strangelove-ventures/interchaintest/v6/relayer"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"

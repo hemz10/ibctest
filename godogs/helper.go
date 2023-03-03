@@ -2,9 +2,7 @@ package godog
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -21,6 +19,7 @@ var eRep *testreporter.RelayerExecReporter
 const ibcPath = "gaia-osmo-demo"
 
 type chain struct {
+	environment  string
 	source, dest ibc.Chain
 	t            *testing.T
 	r            ibc.Relayer
@@ -138,17 +137,17 @@ func (c *chain) relaySetup() error {
 	return nil
 }
 
-func parseConsensusState(stdout, stderr string) (ibc.CLientConsensusState, error) {
-	var consensusState ibc.CLientConsensusState
-	for _, consensus := range strings.Split(stdout, "\n") {
-		if strings.TrimSpace(consensus) == "" {
-			continue
-		}
-		if err := json.Unmarshal([]byte(consensus), &consensusState); err != nil {
-			fmt.Errorf("unmarshal consensus error %s: %v", consensus, err)
-			continue
-		}
-	}
+// func parseConsensusState(stdout, stderr string) (ibc.CLientConsensusState, error) {
+// 	var consensusState ibc.CLientConsensusState
+// 	for _, consensus := range strings.Split(stdout, "\n") {
+// 		if strings.TrimSpace(consensus) == "" {
+// 			continue
+// 		}
+// 		if err := json.Unmarshal([]byte(consensus), &consensusState); err != nil {
+// 			fmt.Errorf("unmarshal consensus error %s: %v", consensus, err)
+// 			continue
+// 		}
+// 	}
 
-	return consensusState, nil
-}
+// 	return consensusState, nil
+// }

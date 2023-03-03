@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"interchaintest/internal/dockerutil"
+	"interchaintest/internal/version"
+
 	"github.com/docker/docker/client"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/version"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 )
 

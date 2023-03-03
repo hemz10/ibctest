@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/avast/retry-go/v4"
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/docker/docker/api/types/container"
@@ -18,7 +20,6 @@ import (
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"go.uber.org/zap"
 )
 

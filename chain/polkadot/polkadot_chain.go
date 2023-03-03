@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"strings"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/99designs/keyring"
 	"github.com/StirlingMarketingGroup/go-namecase"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
@@ -20,7 +22,6 @@ import (
 	"github.com/icza/dyno"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )

@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"interchaintest/internal/blockdb"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
 	"github.com/stretchr/testify/require"
 )
 

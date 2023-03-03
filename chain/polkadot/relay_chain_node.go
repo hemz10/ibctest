@@ -19,9 +19,10 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 	"go.uber.org/zap"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 )
 
 // RelayChainNode defines the properties required for running a polkadot relay chain node.

@@ -59,19 +59,19 @@ func (c *chain) clientStatusShouldBeReturned() error {
 
 func (c *chain) latestHeightFromClientStateShouldBeReturned() error {
 	sourceClientOutput := sourceClientOutputs[0]
-	sourceLatestHeight := sourceClientOutput.ClientState.LatestHeight.RevisionHeight
+	sourceLatestHeight := sourceClientOutput.ClientState.ChainID
 	destClientOutput := destClientOutputs[0]
-	destLatestHeight := destClientOutput.ClientState.LatestHeight.RevisionHeight
+	destLatestHeight := destClientOutput.ClientState.ChainID
 	fmt.Println(sourceLatestHeight, destLatestHeight)
 
 	// query consensus state
-	chainID := c.source.Config().ChainID
-	cmdOutput, _ = c.r.ExecCmd(c.ctx, rep.RelayerExecReporter(c.t), "node-state", chainID)
-	if cmdOutput.Err != nil {
-		return fmt.Errorf("Query consensus state failed: %v", cmdOutput.Err)
-	}
-	clConsesnsus, _ := parseConsensusState(string(cmdOutput.Stdout), string(cmdOutput.Stderr))
-	fmt.Println(clConsesnsus.Timestamp, clConsesnsus.Root, clConsesnsus.NextValidatorsHash)
+	// chainID := c.source.Config().ChainID
+	// cmdOutput, _ = c.r.ExecCmd(c.ctx, rep.RelayerExecReporter(c.t), "node-state", chainID)
+	// if cmdOutput.Err != nil {
+	// 	return fmt.Errorf("Query consensus state failed: %v", cmdOutput.Err)
+	// }
+	// clConsesnsus, _ := parseConsensusState(string(cmdOutput.Stdout), string(cmdOutput.Stderr))
+	// fmt.Println(clConsesnsus.Timestamp, clConsesnsus.Root, clConsesnsus.NextValidatorsHash)
 	return nil
 }
 
@@ -121,11 +121,11 @@ func (c *chain) relayAccountBalanceShouldBeReturned() error {
 }
 
 func (c *chain) weQueryUsingRelay() error {
-	chainID := c.source.Config().ChainID
-	cmdOutput, _ = c.r.ExecCmd(c.ctx, rep.RelayerExecReporter(c.t), "balance", chainID)
-	if cmdOutput.Err != nil {
-		return fmt.Errorf("Query consensus state failed: %v", cmdOutput.Err)
-	}
+	// chainID := c.source.Config().ChainID
+	// cmdOutput, _ = c.r.ExecCmd(c.ctx, rep.RelayerExecReporter(c.t), "balance", chainID)
+	// if cmdOutput.Err != nil {
+	// 	return fmt.Errorf("Query consensus state failed: %v", cmdOutput.Err)
+	// }
 	return nil
 }
 

@@ -16,6 +16,9 @@ import (
 	"sync"
 	"time"
 
+	"interchaintest/internal/blockdb"
+	"interchaintest/internal/dockerutil"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -29,8 +32,6 @@ import (
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/go-connections/nat"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/p2p"

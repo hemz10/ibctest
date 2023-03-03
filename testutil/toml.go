@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/BurntSushi/toml"
 	"github.com/docker/docker/client"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"go.uber.org/zap"
 )
 

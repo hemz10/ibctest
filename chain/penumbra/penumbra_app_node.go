@@ -9,12 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"interchaintest/internal/dockerutil"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"go.uber.org/zap"
 )
 

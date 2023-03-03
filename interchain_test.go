@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"interchaintest/chain/cosmos"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -13,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	"github.com/strangelove-ventures/interchaintest/v6/relayer/rly"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"

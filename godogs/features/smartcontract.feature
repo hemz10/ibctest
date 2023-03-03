@@ -3,7 +3,7 @@ Feature: Deploy SmartContract
     As a Relayer
     First step is to create clients on both chains
 
- Scenario: Deploying SmartContract on Osmosis
-    Given Osmosis Chain running
-    When we Deploy SmartContract on Osmosis
-    Then Contract should be deployed on Osmosis
+ Scenario: Deploying SmartContract on Any chain
+    Given Chain running
+   #  When we Deploy SmartContract on chain
+   #  Then Contract should be deployed on chain

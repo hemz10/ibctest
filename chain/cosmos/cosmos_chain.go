@@ -11,6 +11,11 @@ import (
 	"sync"
 	"time"
 
+	"interchaintest/internal/blockdb"
+	"interchaintest/internal/dockerutil"
+
+	"interchaintest/chain/internal/tendermint"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,10 +30,7 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	volumetypes "github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/internal/tendermint"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/blockdb"
-	"github.com/strangelove-ventures/interchaintest/v6/internal/dockerutil"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"

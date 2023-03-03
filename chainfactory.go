@@ -7,8 +7,9 @@ import (
 	"strings"
 	"sync"
 
+	"interchaintest/chain/icon"
+
 	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/icon"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/penumbra"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/polkadot"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
