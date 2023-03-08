@@ -3,6 +3,7 @@ package icon
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os/exec"
 	"time"
 
@@ -74,4 +75,21 @@ func (it *IconTestnet) GetTransactionResult(hash string) (*icontypes.Transaction
 	out, err := exec.Command(it.Config.Bin, "rpc", "txresult", hash, "--uri", it.Config.URL).Output()
 	json.Unmarshal(out, &result)
 	return result, err
+}
+
+func (it *IconTestnet) GetBalance(address string) (string, error) {
+	addr := icontypes.AddressParam{Address: icontypes.Address(address)}
+	bal, _ := it.Client.GetBalance(&addr)
+
+	// Dividing big integer by 10^18
+	quotient := new(big.Int)
+	quotient.DivMod(bal, big.NewInt(1e18), new(big.Int))
+
+	// Getting remainder and padding with leading zeros
+	remainder := bal.Mod(bal, big.NewInt(1e18)).String()
+
+	// Concatenating quotient and remainder with decimal point
+	result := fmt.Sprintf("%v.%v", quotient, remainder[:2])
+	fmt.Println(result)
+	return result, nil
 }
