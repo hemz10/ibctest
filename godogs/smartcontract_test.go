@@ -59,9 +59,9 @@ func (c *chain) osmosisChainRunning() error {
 		fmt.Println(t)
 
 		// test deploy contract
-		// scoreAddress, _ := it.DeployContract("/home/dell/practice/ibc-bdd/ibctest/chain/icon/BMC-0.1.0-optimized.jar",
-		// 	"/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json", "_net=btp://0x1.icon/")
-		// fmt.Println("Score Address: ", scoreAddress)
+		scoreAddress, _ := it.DeployContract("/home/dell/practice/ibc-bdd/ibctest/chain/icon/BMC-0.1.0-optimized.jar",
+			"/home/dell/practice/ibc-bdd/ibctest/chain/icon/keystore.json", "_net=btp://0x1.icon/")
+		fmt.Println("Score Address: ", scoreAddress)
 
 		// Query contract - cxe3c22462c5ec53d2de928b6923700c3ce9473db0
 		result, _ := it.QueryContract("cxe3c22462c5ec53d2de928b6923700c3ce9473db0", "getOwners", "")
@@ -78,6 +78,8 @@ func (c *chain) osmosisChainRunning() error {
 		fmt.Println(tResult)
 		result, _ = it.QueryContract("cxe3c22462c5ec53d2de928b6923700c3ce9473db0", "getOwners", "")
 		fmt.Println(result)
+
+		it.GetBalance("hx3701471b528efb33964dec4d96adf60dd91d249c")
 		return nil
 	}
 }
